@@ -1,0 +1,47 @@
+#!/usr/bin/python
+
+import sys, os, re, argparse
+
+parser = argparse.ArgumentParser(description='Process arguments.')
+parser.add_argument('root_directory', type=str, help='Root dir to search in.')
+parser.add_argument('keyword', type=str, help='The keyword/pattern to search for.')
+args = parser.parse_args(sys.argv[1:])
+
+root_dir = args.root_directory
+keyword = args.keyword
+regex = re.compile(keyword)
+
+# Helper function to search for a pattern in a file.
+def containsPattern(file, pattern):
+  with open(file, 'r') as openFile:
+    for line in openFile:
+      if re.search(pattern, line):
+        return True
+  return False
+
+
+# Initialize dictionary to store match count.
+dict = {}
+
+# Assumes that path is relative.
+cwd = os.getcwd()
+
+def traverseDirs(startdir):
+  path = startdir
+  entries = os.listdir(startdir)
+  fileCount = 0
+  
+  for entry in entries:
+    pathtoentry = os.path.join(path, entry)
+    if os.path.isdir(pathtoentry):
+      traverseDirs(pathtoentry)
+    elif os.path.isfile(pathtoentry):
+      contains = containsPattern(pathtoentry, regex)
+      if contains == True:
+        fileCount += 1
+
+  dict[path] = fileCount
+
+traverseDirs(os.path.join(cwd, root_dir))
+
+print dict
